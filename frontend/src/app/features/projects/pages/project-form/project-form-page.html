@@ -1,0 +1,170 @@
+<section class="mx-auto max-w-2xl space-y-6">
+  <header>
+    <a routerLink="/projects" class="btn-link text-sm">← Back to projects</a>
+    <h1 class="mt-2 text-2xl font-semibold text-slate-900">
+      {{ isEdit() ? 'Edit project' : 'New project' }}
+    </h1>
+  </header>
+
+  @if (notFound()) {
+    <div class="card p-8 text-center" role="alert">
+      <p class="font-medium text-slate-900">Project not found.</p>
+      <p class="mt-1 text-sm text-slate-500">
+        It may have been deleted, or you don't have access to it.
+      </p>
+      <a routerLink="/projects" class="btn btn-secondary mt-4">Back to projects</a>
+    </div>
+  } @else if (existing.error()) {
+    <div class="card p-8 text-center" role="alert">
+      <p class="font-medium text-slate-900">We couldn't load this project.</p>
+      <button type="button" class="btn btn-secondary mt-4" (click)="existing.reload()">
+        Retry
+      </button>
+    </div>
+  } @else if (isEdit() && existing.isLoading()) {
+    <div class="card p-10 text-center text-sm text-slate-500" aria-busy="true">
+      Loading project…
+    </div>
+  } @else {
+    <form class="card space-y-5 p-6" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError(); as message) {
+        <div class="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+          {{ message }}
+        </div>
+      }
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label for="client_name" class="label"
+            >Client name <span class="text-red-600">*</span></label
+          >
+          <input
+            id="client_name"
+            type="text"
+            class="input"
+            formControlName="client_name"
+            [class.input-invalid]="error('client_name')"
+            [attr.aria-invalid]="!!error('client_name')"
+            aria-describedby="client_name-error"
+          />
+          @if (error('client_name'); as message) {
+            <p id="client_name-error" class="field-error">{{ message }}</p>
+          }
+        </div>
+
+        <div>
+          <label for="project_name" class="label"
+            >Project name <span class="text-red-600">*</span></label
+          >
+          <input
+            id="project_name"
+            type="text"
+            class="input"
+            formControlName="project_name"
+            [class.input-invalid]="error('project_name')"
+            [attr.aria-invalid]="!!error('project_name')"
+            aria-describedby="project_name-error"
+          />
+          @if (error('project_name'); as message) {
+            <p id="project_name-error" class="field-error">{{ message }}</p>
+          }
+        </div>
+      </div>
+
+      <div>
+        <label for="description" class="label">Description</label>
+        <textarea
+          id="description"
+          rows="4"
+          class="input"
+          formControlName="description"
+          [class.input-invalid]="error('description')"
+          aria-describedby="description-error"
+        ></textarea>
+        @if (error('description'); as message) {
+          <p id="description-error" class="field-error">{{ message }}</p>
+        }
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label for="status" class="label">Status <span class="text-red-600">*</span></label>
+          <select
+            id="status"
+            class="input"
+            formControlName="status"
+            [class.input-invalid]="error('status')"
+          >
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+          @if (error('status'); as message) {
+            <p class="field-error">{{ message }}</p>
+          }
+        </div>
+
+        <div>
+          <label for="priority" class="label">Priority <span class="text-red-600">*</span></label>
+          <select
+            id="priority"
+            class="input"
+            formControlName="priority"
+            [class.input-invalid]="error('priority')"
+          >
+            @for (priority of priorities; track priority) {
+              <option [value]="priority">{{ priorityLabels[priority] }}</option>
+            }
+          </select>
+          @if (error('priority'); as message) {
+            <p class="field-error">{{ message }}</p>
+          }
+        </div>
+
+        <div>
+          <label for="start_date" class="label"
+            >Start date <span class="text-red-600">*</span></label
+          >
+          <input
+            id="start_date"
+            type="date"
+            class="input"
+            formControlName="start_date"
+            [class.input-invalid]="error('start_date')"
+            aria-describedby="start_date-error"
+          />
+          @if (error('start_date'); as message) {
+            <p id="start_date-error" class="field-error">{{ message }}</p>
+          }
+        </div>
+
+        <div>
+          <label for="due_date" class="label">Due date</label>
+          <input
+            id="due_date"
+            type="date"
+            class="input"
+            formControlName="due_date"
+            [attr.min]="form.controls.start_date.value || null"
+            [class.input-invalid]="error('due_date') || dateRangeError()"
+            aria-describedby="due_date-error"
+          />
+          @if (error('due_date'); as message) {
+            <p id="due_date-error" class="field-error">{{ message }}</p>
+          } @else if (dateRangeError()) {
+            <p id="due_date-error" class="field-error">
+              Due date cannot be earlier than the start date.
+            </p>
+          }
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 border-t border-slate-100 pt-5">
+        <a routerLink="/projects" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : isEdit() ? 'Save changes' : 'Create project' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>
